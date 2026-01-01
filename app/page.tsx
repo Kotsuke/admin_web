@@ -24,21 +24,22 @@ export default function LoginPage() {
         password,
       });
 
-      // PERBAIKAN: Ambil langsung data dari response body
-      const userData = res.data; 
+      // Response dari backend: { message, token, user: { id, username, email, full_name, role, ... } }
+      const { token, user } = res.data;
 
-      console.log("Cek Data Login:", userData); // Debugging: Pastikan 'role' ada di sini
+      console.log("Cek Data Login:", res.data); // Debugging
 
-      // Cek Role (pastikan huruf kecil 'admin' sesuai database)
-      if (userData.role !== 'admin') {
+      // Cek Role (user.role adalah 'admin' atau 'user')
+      if (user.role !== 'admin') {
         setError('Akses Ditolak! Anda bukan Admin.');
         setLoading(false);
         return;
       }
 
-      Cookies.set('admin_token', JSON.stringify(userData), { expires: 1 });
+      // Simpan token dan user data
+      Cookies.set('admin_token', JSON.stringify({ token, ...user }), { expires: 1 });
       router.push('/dashboard');
-      
+
     } catch (err: any) {
       console.error(err);
       // Tampilkan pesan error spesifik jika ada dari backend
@@ -88,9 +89,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none ${loading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             {loading ? 'Processing...' : 'Sign In'}
           </button>

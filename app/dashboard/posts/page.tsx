@@ -3,16 +3,17 @@
 // --- 1. IMPORT LIBRARY ---
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Trash2, MapPin, Search, ExternalLink, Calendar, RefreshCcw } from 'lucide-react'; 
+import { Trash2, MapPin, Search, ExternalLink, Calendar, RefreshCcw } from 'lucide-react';
 import Swal from 'sweetalert2';
+import Cookies from 'js-cookie';
 
 // --- 2. FUNGSI UTAMA HALAMAN ---
 export default function ManagePostsPage() {
-  
+
   // === STATE (PENAMPUNG DATA) ===
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // State Filter
   const [search, setSearch] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -23,7 +24,7 @@ export default function ManagePostsPage() {
     setLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      
+
       // 👇 PERBAIKAN: Tambah headers ini biar tembus Ngrok
       const res = await axios.get(`${apiUrl}/posts`, {
         headers: {
@@ -31,19 +32,19 @@ export default function ManagePostsPage() {
           "Content-Type": "application/json"
         }
       });
-      
+
       console.log("DATA API DITERIMA:", res.data);
 
       if (Array.isArray(res.data)) {
         setPosts(res.data);
       } else {
         console.error("Format Data Salah! Harusnya Array [], tapi dapat:", res.data);
-        setPosts([]); 
+        setPosts([]);
       }
-      
+
     } catch (error) {
       console.error("Gagal ambil data:", error);
-      setPosts([]); 
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,7 @@ export default function ManagePostsPage() {
     fetchPosts();
   }, []);
 
-  // === FUNGSI: HAPUS DATA (DENGAN HEADER NGROK) ===
+  // === FUNGSI: HAPUS DATA (DENGAN HEADER NGROK + TOKEN) ===
   const handleDelete = async (postId: number) => {
     const result = await Swal.fire({
       title: 'Hapus Laporan?',
@@ -68,18 +69,22 @@ export default function ManagePostsPage() {
     if (result.isConfirmed) {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        
-        // 👇 PERBAIKAN: Tambah headers di sini juga
+
+        // Ambil token dari cookies
+        const adminData = Cookies.get('admin_token');
+        const token = adminData ? JSON.parse(adminData).token : null;
+
         await axios.delete(`${apiUrl}/posts/${postId}`, {
-            headers: {
-              "ngrok-skip-browser-warning": "true"
-            }
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "Authorization": `Bearer ${token}`
+          }
         });
-        
+
         setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
         Swal.fire('Terhapus!', 'Laporan telah dihapus.', 'success');
-      } catch (error) {
-        Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus.', 'error');
+      } catch (error: any) {
+        Swal.fire('Gagal!', error.response?.data?.error || 'Terjadi kesalahan saat menghapus.', 'error');
       }
     }
   };
@@ -100,7 +105,7 @@ export default function ManagePostsPage() {
       (post.uploaded_by || '').toLowerCase().includes(search.toLowerCase());
 
     let matchesDate = true;
-    const postDate = new Date(post.date); 
+    const postDate = new Date(post.date);
 
     if (startDate) {
       const start = new Date(startDate);
@@ -127,7 +132,7 @@ export default function ManagePostsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Laporan Masuk</h1>
-        
+
         <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-lg shadow-sm border">
           <div className="relative">
             <input
@@ -142,22 +147,22 @@ export default function ManagePostsPage() {
 
           <div className="h-6 w-px bg-gray-300 mx-1 hidden md:block"></div>
 
-          <input 
-            type="date" 
+          <input
+            type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             className="border rounded-md px-2 py-2 text-sm text-black focus:ring-blue-500"
           />
           <span className="text-gray-400">-</span>
-          <input 
-            type="date" 
+          <input
+            type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             className="border rounded-md px-2 py-2 text-sm text-black focus:ring-blue-500"
           />
 
           {(search || startDate || endDate) && (
-            <button 
+            <button
               onClick={resetFilter}
               className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
               title="Reset Filter"
@@ -184,18 +189,18 @@ export default function ManagePostsPage() {
               <tr key={post.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="w-16 h-16 relative rounded-lg overflow-hidden border bg-gray-200 group">
-                    <img 
-                      src={post.image_url} 
-                      alt="Bukti" 
+                    <img
+                      src={post.image_url}
+                      alt="Bukti"
                       className="w-full h-full object-cover"
                       onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')}
                     />
-                    <a 
-                        href={post.image_url} 
-                        target="_blank" 
-                        className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                    <a
+                      href={post.image_url}
+                      target="_blank"
+                      className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
                     >
-                        <ExternalLink size={16} />
+                      <ExternalLink size={16} />
                     </a>
                   </div>
                 </td>
@@ -207,10 +212,9 @@ export default function ManagePostsPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${
-                      post.severity === 'SERIUS' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
-                  }`}>
-                      {post.severity}
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${post.severity === 'SERIUS' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
+                    }`}>
+                    {post.severity}
                   </span>
                   <p className="text-gray-600 mt-1 line-clamp-1">{post.caption}</p>
                 </td>
@@ -221,7 +225,7 @@ export default function ManagePostsPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <button 
+                  <button
                     onClick={() => handleDelete(post.id)}
                     className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"
                   >
@@ -234,7 +238,7 @@ export default function ManagePostsPage() {
               <tr>
                 <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
                   <div className="flex flex-col items-center justify-center gap-2">
-                     <p className="font-medium">Tidak ada data ditemukan.</p>
+                    <p className="font-medium">Tidak ada data ditemukan.</p>
                   </div>
                 </td>
               </tr>
