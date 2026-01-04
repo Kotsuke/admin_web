@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
-import { LayoutDashboard, FileText, Users, Map, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Map, LogOut, Menu, Star } from 'lucide-react';
 
 export default function DashboardLayout({
   children,
@@ -37,6 +37,7 @@ export default function DashboardLayout({
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Laporan Masuk', href: '/dashboard/posts', icon: FileText },
     { name: 'Data Users', href: '/dashboard/users', icon: Users },
+    { name: 'Review App', href: '/dashboard/reviews', icon: Star },
     { name: 'Peta Sebaran', href: '/dashboard/map', icon: Map },
   ];
 
@@ -45,17 +46,16 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-gray-100">
       {/* SIDEBAR */}
-      <aside 
-        className={`bg-white text-gray-800 shadow-xl transition-all duration-300 ${
-          isSidebarOpen ? 'w-64' : 'w-20'
-        } flex flex-col`}
+      <aside
+        className={`bg-white text-gray-800 shadow-xl transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'
+          } flex flex-col`}
       >
         <div className="p-4 border-b flex items-center justify-between">
           <h1 className={`font-bold text-xl text-blue-600 ${!isSidebarOpen && 'hidden'}`}>
             SmartInfra
           </h1>
           <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-gray-200 rounded">
-             <Menu size={24} />
+            <Menu size={24} />
           </button>
         </div>
 
@@ -66,11 +66,10 @@ export default function DashboardLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-blue-600 text-white' 
+                className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${isActive
+                    ? 'bg-blue-600 text-white'
                     : 'hover:bg-gray-100 text-gray-600'
-                }`}
+                  }`}
               >
                 <item.icon size={24} />
                 <span className={`${!isSidebarOpen && 'hidden'} font-medium`}>
