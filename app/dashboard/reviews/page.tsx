@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
-import { Star, Trash2 } from 'lucide-react';
+import { Star, Trash2, Filter, ArrowUpDown } from 'lucide-react';
 
 interface Review {
     id: number;
@@ -18,6 +18,10 @@ export default function ReviewsPage() {
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // State untuk sorting dan filtering
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+    const [filterRating, setFilterRating] = useState<number | 'all'>('all');
 
     const fetchReviews = async () => {
         try {
@@ -71,12 +75,54 @@ export default function ReviewsPage() {
         }
     };
 
+    // Logika Filter & Sorting
+    const filteredReviews = reviews
+        .filter(r => filterRating === 'all' || r.rating === filterRating)
+        .sort((a, b) => {
+            const dateA = new Date(a.created_at).getTime();
+            const dateB = new Date(b.created_at).getTime();
+            return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        });
+
     if (loading) return <div className="p-8 text-center text-gray-500">Memuat data review...</div>;
     if (error) return <div className="p-8 text-center text-red-500">Error: {error}</div>;
 
     return (
         <div>
-            <h1 className="text-2xl font-bold mb-6 text-gray-800">Analisa Review & Rating</h1>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Analisa Review & Rating</h1>
+
+                {/* Controls */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                        <ArrowUpDown size={16} className="text-gray-500" />
+                        <select
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                            className="bg-transparent text-sm text-gray-700 focus:outline-none cursor-pointer"
+                        >
+                            <option value="desc">Terbaru</option>
+                            <option value="asc">Terlama</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                        <Filter size={16} className="text-gray-500" />
+                        <select
+                            value={filterRating}
+                            onChange={(e) => setFilterRating(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                            className="bg-transparent text-sm text-gray-700 focus:outline-none cursor-pointer"
+                        >
+                            <option value="all">Semua Bintang</option>
+                            <option value="5">5 Bintang</option>
+                            <option value="4">4 Bintang</option>
+                            <option value="3">3 Bintang</option>
+                            <option value="2">2 Bintang</option>
+                            <option value="1">1 Bintang</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -113,7 +159,7 @@ export default function ReviewsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {reviews.map((review) => (
+                            {filteredReviews.map((review) => (
                                 <tr key={review.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="p-4 text-gray-500">#{review.id}</td>
                                     <td className="p-4">
@@ -143,10 +189,10 @@ export default function ReviewsPage() {
                                     </td>
                                 </tr>
                             ))}
-                            {reviews.length === 0 && (
+                            {filteredReviews.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="p-8 text-center text-gray-500">
-                                        Belum ada review yang masuk.
+                                        Tidak ada review yang sesuai filter.
                                     </td>
                                 </tr>
                             )}
