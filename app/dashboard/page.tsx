@@ -11,7 +11,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 
 type GrowthData = {
@@ -187,8 +190,8 @@ export default function DashboardHome() {
                 key={filter}
                 onClick={() => setTimeFilter(filter)}
                 className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${timeFilter === filter
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
                   }`}
               >
                 {filter === 'daily' && 'Harian'}
@@ -238,6 +241,55 @@ export default function DashboardHome() {
               />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Sentiment Section */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-6">Analisis Sentimen Ulasan</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Positif', value: stats?.sentiment?.positive || 0 },
+                    { name: 'Negatif', value: stats?.sentiment?.negative || 0 },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  <Cell key="cell-pos" fill="#10b981" />
+                  <Cell key="cell-neg" fill="#ef4444" />
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-green-50 border border-green-100">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <div>
+                  <p className="text-sm text-gray-600">Sentimen Positif</p>
+                  <p className="text-2xl font-bold text-gray-800">{stats?.sentiment?.positive || 0} Review</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-red-50 border border-red-100">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div>
+                  <p className="text-sm text-gray-600">Sentimen Negatif</p>
+                  <p className="text-2xl font-bold text-gray-800">{stats?.sentiment?.negative || 0} Review</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

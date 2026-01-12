@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { Star, Trash2, Filter, ArrowUpDown } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface Review {
     id: number;
@@ -11,6 +12,7 @@ interface Review {
     full_name: string;
     rating: number;
     comment: string | null;
+    sentiment: string | null;
     created_at: string;
 }
 
@@ -46,32 +48,51 @@ export default function ReviewsPage() {
     }, []);
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus review ini?')) return;
+        const result = await Swal.fire({
+            title: 'Hapus Review?',
+            text: "Review yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        });
 
-        try {
-            const token = Cookies.get('admin_token');
-            const session = token ? JSON.parse(token) : null;
-            const jwt = session?.token;
+        if (result.isConfirmed) {
+            try {
+                const token = Cookies.get('admin_token');
+                const session = token ? JSON.parse(token) : null;
+                const jwt = session?.token;
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-            const res = await fetch(`${apiUrl}/reviews/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${jwt}`,
-                    "ngrok-skip-browser-warning": "true"
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                const res = await fetch(`${apiUrl}/reviews/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${jwt}`,
+                        "ngrok-skip-browser-warning": "true"
+                    }
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || 'Gagal menghapus review');
                 }
-            });
 
-            if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.error || 'Gagal menghapus review');
+                // Refresh data
+                setReviews(reviews.filter(r => r.id !== id));
+                Swal.fire(
+                    'Terhapus!',
+                    'Review berhasil dihapus.',
+                    'success'
+                );
+            } catch (err: any) {
+                Swal.fire(
+                    'Gagal!',
+                    err.message,
+                    'error'
+                );
             }
-
-            // Refresh data
-            setReviews(reviews.filter(r => r.id !== id));
-            alert('Review berhasil dihapus');
-        } catch (err: any) {
-            alert(err.message);
         }
     };
 
@@ -154,6 +175,7 @@ export default function ReviewsPage() {
                                 <th className="p-4 font-semibold text-gray-600">User</th>
                                 <th className="p-4 font-semibold text-gray-600">Rating</th>
                                 <th className="p-4 font-semibold text-gray-600">Komentar</th>
+                                <th className="p-4 font-semibold text-gray-600">Sentimen</th>
                                 <th className="p-4 font-semibold text-gray-600">Tanggal</th>
                                 <th className="p-4 font-semibold text-gray-600 text-right">Aksi</th>
                             </tr>
@@ -174,6 +196,18 @@ export default function ReviewsPage() {
                                     </td>
                                     <td className="p-4 text-gray-600 max-w-xs truncate" title={review.comment || ''}>
                                         {review.comment || '-'}
+                                    </td>
+                                    <td className="p-4">
+                                        {review.sentiment ? (
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${review.sentiment === 'positif'
+                                                ? 'bg-green-100 text-green-700 border border-green-200'
+                                                : 'bg-red-100 text-red-700 border border-red-200'
+                                                }`}>
+                                                {review.sentiment === 'positif' ? 'Positif' : 'Negatif'}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400 text-xs italic">Belum Dianalisis</span>
+                                        )}
                                     </td>
                                     <td className="p-4 text-gray-500 whitespace-nowrap">
                                         {review.created_at}
