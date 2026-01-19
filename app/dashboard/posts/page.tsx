@@ -7,6 +7,34 @@ import { Trash2, MapPin, Search, ExternalLink, Calendar, RefreshCcw, Clock, Wren
 import Swal from 'sweetalert2';
 import Cookies from 'js-cookie';
 
+
+// --- KOMPONEN BANTUAN: SecureImage ---
+// Mengambil gambar via Axios agar bisa menyisipkan header Ngrok
+// --- KOMPONEN BANTUAN: SecureImage ---
+// Mengambil gambar via PROXY API (Next.js) untuk bypass CORS & Ngrok Warning
+const SecureImage = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
+  // Jika URL tidak valid atau lokal, tampilkan langsung
+  if (!src || (!src.includes('ngrok') && !src.includes('localhost') && !src.includes('127.0.0.1'))) {
+    return <img src={src || 'https://via.placeholder.com/150'} alt={alt} className={className} />;
+  }
+
+  // Gunakan Proxy Route yang baru kita buat
+  const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(src)}`;
+
+  return (
+    <img
+      src={proxyUrl}
+      alt={alt}
+      className={className}
+      onError={(e) => {
+        // Fallback jika proxy gagal
+        e.currentTarget.src = 'https://via.placeholder.com/150?text=Error+Load';
+        e.currentTarget.onerror = null; // Prevent loop
+      }}
+    />
+  );
+};
+
 // --- 2. FUNGSI UTAMA HALAMAN ---
 export default function ManagePostsPage() {
 
@@ -250,18 +278,18 @@ export default function ManagePostsPage() {
               <tr key={post.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="w-16 h-16 relative rounded-lg overflow-hidden border bg-gray-200 group">
-                    <img
-                      src={post.image_url}
-                      alt="Bukti"
-                      className="w-full h-full object-cover"
-                      onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')}
-                    />
                     <a
-                      href={post.image_url}
+                      href={`/api/proxy-image?url=${encodeURIComponent(post.image_url)}`}
                       target="_blank"
-                      className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                      rel="noopener noreferrer"
+                      className="block w-full h-full hover:opacity-90 transition-opacity"
+                      title="Buka Gambar di Tab Baru"
                     >
-                      <ExternalLink size={16} />
+                      <SecureImage
+                        src={post.image_url}
+                        alt="Bukti"
+                        className="w-full h-full object-cover"
+                      />
                     </a>
                   </div>
                 </td>
@@ -353,11 +381,10 @@ export default function ManagePostsPage() {
             <div className="p-6 space-y-6">
               {/* Image */}
               <div className="rounded-xl overflow-hidden border">
-                <img
+                <SecureImage
                   src={selectedPost.image_url}
                   alt="Bukti Foto"
                   className="w-full h-64 object-cover"
-                  onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/600x300?text=Gambar+Tidak+Tersedia')}
                 />
               </div>
 
