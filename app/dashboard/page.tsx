@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Users, AlertTriangle, FileCheck, Star, TrendingUp } from 'lucide-react';
+import { Users, AlertTriangle, FileCheck, Star, TrendingUp, Clock, Wrench, CheckCircle } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -170,6 +170,45 @@ export default function DashboardHome() {
           <div>
             <p className="text-gray-500 text-sm">Rata-rata Review</p>
             <h3 className="text-2xl font-bold text-black">{stats?.average_rating || 0} / 5.0</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Breakdown Section */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Status Penanganan Laporan</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Menunggu */}
+          <div className="flex items-center gap-4 p-4 rounded-lg bg-orange-50 border border-orange-200">
+            <div className="p-3 bg-orange-100 text-orange-600 rounded-full">
+              <Clock size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Menunggu</p>
+              <p className="text-2xl font-bold text-orange-600">{stats?.status_breakdown?.menunggu || 0}</p>
+            </div>
+          </div>
+
+          {/* Diproses */}
+          <div className="flex items-center gap-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
+            <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
+              <Wrench size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Sedang Diproses</p>
+              <p className="text-2xl font-bold text-blue-600">{stats?.status_breakdown?.diproses || 0}</p>
+            </div>
+          </div>
+
+          {/* Selesai */}
+          <div className="flex items-center gap-4 p-4 rounded-lg bg-green-50 border border-green-200">
+            <div className="p-3 bg-green-100 text-green-600 rounded-full">
+              <CheckCircle size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Selesai</p>
+              <p className="text-2xl font-bold text-green-600">{stats?.status_breakdown?.selesai || 0}</p>
+            </div>
           </div>
         </div>
       </div>
